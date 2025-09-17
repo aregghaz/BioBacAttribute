@@ -126,28 +126,35 @@ public class AttributeServiceImpl implements AttributeService {
                 newOpt.setLabel(optReq.getLabel());
                 newOpt.setValue(optReq.getValue());
                 newOpt.setAttributeDefinition(attribute);
+                optionValueRepository.save(newOpt);
                 attribute.getOptions().add(newOpt);
             } else {
                 OptionValue existingOpt = existingOptions.get(optReq.getId());
-                if (existingOpt == null) throw new NotFoundException("Option not found: " + optReq.getId());
+                if (existingOpt == null) {
+                    throw new NotFoundException("Option not found: " + optReq.getId());
+                }
 
                 boolean optionUsed = attributeValueRepository.existsByDefinitionAndOption(attribute, existingOpt);
                 if (optionUsed) {
                     if (!Objects.equals(existingOpt.getLabel(), optReq.getLabel()) ||
                             !Objects.equals(existingOpt.getValue(), optReq.getValue())) {
-                        throw new InvalidDataException("Cannot modify option in use: " + optReq.getLabel());
+                        throw new InvalidDataException("Cannot modify option in use: " + existingOpt.getLabel());
                     }
                 } else {
                     existingOpt.setLabel(optReq.getLabel());
                     existingOpt.setValue(optReq.getValue());
-                    existingOptions.remove(optReq.getId());
                 }
+
+                existingOptions.remove(optReq.getId());
             }
         }
 
         for (OptionValue remaining : existingOptions.values()) {
             boolean optionUsed = attributeValueRepository.existsByDefinitionAndOption(attribute, remaining);
-            if (!optionUsed) optionValueRepository.delete(remaining);
+            if (optionUsed) {
+                throw new InvalidDataException("Cannot delete option in use: " + remaining.getLabel());
+            }
+            optionValueRepository.delete(remaining);
         }
     }
 
