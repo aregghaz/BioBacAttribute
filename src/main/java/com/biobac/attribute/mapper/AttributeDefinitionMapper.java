@@ -30,6 +30,7 @@ public interface AttributeDefinitionMapper {
             resp.setDataType(type);
             resp.setCreatedAt(entity.getCreatedAt());
             resp.setUpdatedAt(entity.getUpdatedAt());
+            resp.setAttributeGroupIds(mapGroupIds(entity));
 
             List<OptionValueResponse> options = Optional.ofNullable(entity.getOptions())
                     .orElseGet(Set::of)
