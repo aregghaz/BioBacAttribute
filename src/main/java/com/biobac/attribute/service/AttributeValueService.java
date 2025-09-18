@@ -8,6 +8,8 @@ import java.util.List;
 public interface AttributeValueService {
     List<AttributeDefResponse> createAttributeValues(Long targetId, String targetType, List<AttributeUpsertRequest> attributes);
 
+    List<AttributeDefResponse> updateAttributeValues(Long targetId, String targetType, List<AttributeUpsertRequest> attributes, List<Long> attributeGroupIds);
+
     List<AttributeDefResponse> getAttributeValues(Long targetId, String targetType);
 
     void deleteAttributeValues(Long targetId, String targetType);

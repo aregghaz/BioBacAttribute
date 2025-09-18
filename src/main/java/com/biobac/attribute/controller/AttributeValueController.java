@@ -28,6 +28,19 @@ public class AttributeValueController {
         return ResponseUtil.success("Attribute values saved successfully", updatedAttributes);
     }
 
+    @PutMapping
+    public ApiResponse<List<AttributeDefResponse>> updateValues(
+            @RequestParam Long targetId,
+            @RequestParam String targetType,
+            @RequestParam List<Long> attributeGroupIds,
+            @RequestBody List<AttributeUpsertRequest> attributes
+    ) {
+        List<AttributeDefResponse> updatedAttributes =
+                attributeValueService.updateAttributeValues(targetId, targetType, attributes, attributeGroupIds);
+
+        return ResponseUtil.success("Attribute values updated successfully", updatedAttributes);
+    }
+
     @GetMapping("/{targetId}/{targetType}")
     public ApiResponse<List<AttributeDefResponse>> getValues(@PathVariable Long targetId, @PathVariable String targetType) {
         List<AttributeDefResponse> attributes = attributeValueService.getAttributeValues(targetId, targetType);

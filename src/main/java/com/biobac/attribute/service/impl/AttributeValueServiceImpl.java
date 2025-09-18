@@ -32,21 +32,69 @@ public class AttributeValueServiceImpl implements AttributeValueService {
 
     @Override
     @Transactional
-    public List<AttributeDefResponse> createAttributeValues(Long targetId, String targetType, List<AttributeUpsertRequest> attributes) {
+    public List<AttributeDefResponse> createAttributeValues(
+            Long targetId,
+            String targetType,
+            List<AttributeUpsertRequest> attributes
+    ) {
         if (attributes == null || attributes.isEmpty()) {
             return List.of();
         }
 
         AttributeTargetType resolvedType = AttributeTargetType.valueOf(targetType.toUpperCase());
+        saveOrUpdateValues(targetId, resolvedType, attributes);
 
+        return attributeValueRepository.findByTargetTypeAndTargetId(resolvedType, targetId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<AttributeDefResponse> updateAttributeValues(
+            Long targetId,
+            String targetType,
+            List<AttributeUpsertRequest> attributes,
+            List<Long> attributeGroupIds
+    ) {
+        AttributeTargetType resolvedType = AttributeTargetType.valueOf(targetType.toUpperCase());
+        saveOrUpdateValues(targetId, resolvedType, attributes);
+
+        if (attributeGroupIds == null || attributeGroupIds.isEmpty()) {
+            deleteAttributeValues(targetId, targetType);
+        } else {
+            List<AttributeValue> existingValues = attributeValueRepository.findByTargetTypeAndTargetId(resolvedType, targetId);
+
+            List<AttributeValue> toDelete = existingValues.stream()
+                    .filter(v -> v.getDefinition().getGroups().stream()
+                            .map(AttributeGroup::getId)
+                            .noneMatch(attributeGroupIds::contains))
+                    .toList();
+
+            if (!toDelete.isEmpty()) {
+                attributeValueRepository.deleteAll(toDelete);
+            }
+        }
+
+        return attributeValueRepository.findByTargetTypeAndTargetId(resolvedType, targetId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private void saveOrUpdateValues(
+            Long targetId,
+            AttributeTargetType resolvedType,
+            List<AttributeUpsertRequest> attributes
+    ) {
         for (AttributeUpsertRequest req : attributes) {
             AttributeDefinition def = attributeDefinitionRepository.findById(req.getId())
-                    .orElseThrow(() -> new NotFoundException("AttributeDefinition not found: " + req.getId()));
+                    .orElseThrow(() -> new NotFoundException("Attribute Definition not found: " + req.getId()));
 
             String rawValue = convertValueToString(def, req.getValue());
 
             AttributeValueUtil.validateOrThrow(def.getDataType(), rawValue);
-
             validateOptions(def, rawValue);
 
             AttributeValue attrValue = attributeValueRepository
@@ -60,24 +108,6 @@ public class AttributeValueServiceImpl implements AttributeValueService {
 
             attributeValueRepository.save(attrValue);
         }
-
-        List<AttributeValue> updatedValues = attributeValueRepository.findByTargetTypeAndTargetId(resolvedType, targetId);
-
-        return updatedValues.stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<AttributeDefResponse> getAttributeValues(Long targetId, String targetType) {
-        List<AttributeValue> values = attributeValueRepository.findByTargetTypeAndTargetId(
-                AttributeTargetType.valueOf(targetType), targetId
-        );
-
-        return values.stream()
-                .map(this::toResponse)
-                .toList();
     }
 
     @Override
@@ -90,6 +120,18 @@ public class AttributeValueServiceImpl implements AttributeValueService {
         if (!values.isEmpty()) {
             attributeValueRepository.deleteAll(values);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AttributeDefResponse> getAttributeValues(Long targetId, String targetType) {
+        List<AttributeValue> values = attributeValueRepository.findByTargetTypeAndTargetId(
+                AttributeTargetType.valueOf(targetType), targetId
+        );
+
+        return values.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private AttributeDefResponse toResponse(AttributeValue v) {
