@@ -23,7 +23,7 @@ public interface AttributeDefinitionMapper {
         }
 
         AttributeDataType type = entity.getDataType();
-        if (EnumSet.of(AttributeDataType.SELECT, AttributeDataType.MULTISELECT).contains(type)) {
+        if (EnumSet.of(AttributeDataType.SELECT, AttributeDataType.MULTISELECT, AttributeDataType.RADIO).contains(type)) {
             AttributeOptionDefResponse resp = new AttributeOptionDefResponse();
             resp.setId(entity.getId());
             resp.setName(entity.getName());

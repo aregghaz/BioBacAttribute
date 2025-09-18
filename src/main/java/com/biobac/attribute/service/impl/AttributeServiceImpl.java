@@ -70,10 +70,10 @@ public class AttributeServiceImpl implements AttributeService {
 
         attribute = attributeDefinitionRepository.save(attribute);
 
-        if (EnumSet.of(AttributeDataType.SELECT, AttributeDataType.MULTISELECT)
+        if (EnumSet.of(AttributeDataType.SELECT, AttributeDataType.MULTISELECT, AttributeDataType.RADIO)
                 .contains(request.getDataType())) {
             if (request.getOptions() == null || request.getOptions().isEmpty()) {
-                throw new InvalidDataException("Options are required for SELECT and MULTISELECT attributes");
+                throw new InvalidDataException("Options are required for SELECT, RADIO and MULTISELECT attributes");
             }
             applyOptions(attribute, request.getOptions());
         }
@@ -107,7 +107,7 @@ public class AttributeServiceImpl implements AttributeService {
             attribute.setGroups(groups);
         }
 
-        if (EnumSet.of(AttributeDataType.SELECT, AttributeDataType.MULTISELECT)
+        if (EnumSet.of(AttributeDataType.SELECT, AttributeDataType.MULTISELECT, AttributeDataType.RADIO)
                 .contains(attribute.getDataType()) && request.getOptions() != null) {
             updateAttributeOptions(attribute, request.getOptions());
         }

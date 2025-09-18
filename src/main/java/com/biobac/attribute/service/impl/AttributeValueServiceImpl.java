@@ -137,12 +137,12 @@ public class AttributeValueServiceImpl implements AttributeValueService {
     private AttributeDefResponse toResponse(AttributeValue v) {
         AttributeDataType type = v.getDefinition().getDataType();
 
-        if (type == AttributeDataType.SELECT || type == AttributeDataType.MULTISELECT) {
+        if (type == AttributeDataType.SELECT || type == AttributeDataType.MULTISELECT || type == AttributeDataType.RADIO) {
             List<Long> optionIds = new ArrayList<>();
             String raw = v.getValue();
             if (raw != null && !raw.isBlank()) {
                 try {
-                    if (type == AttributeDataType.SELECT) {
+                    if (type == AttributeDataType.SELECT || type == AttributeDataType.RADIO) {
                         optionIds.add(Long.valueOf(raw.trim()));
                     } else {
                         optionIds.addAll(AttributeValueUtil.parseMultiSelect(raw));
@@ -196,14 +196,30 @@ public class AttributeValueServiceImpl implements AttributeValueService {
                 }
                 yield col.stream().map(Object::toString).collect(Collectors.joining(","));
             }
-            case SELECT -> {
+            case SELECT, RADIO -> {
                 if (value instanceof Collection<?> col) {
                     if (col.size() != 1) {
-                        throw new InvalidDataException("SELECT requires exactly one option ID");
+                        throw new InvalidDataException((def.getDataType() == AttributeDataType.SELECT ? "SELECT" : "RADIO") + " requires exactly one option ID");
                     }
                     yield col.iterator().next().toString();
                 }
                 yield String.valueOf(value);
+            }
+            case BOOLEAN -> {
+                if (value instanceof Boolean b) {
+                    yield b ? "1" : "0";
+                } else if (value instanceof Number n) {
+                    yield n.intValue() != 0 ? "1" : "0";
+                } else {
+                    String t = String.valueOf(value).trim();
+                    if (t.equalsIgnoreCase("true") || t.equals("1")) {
+                        yield "1";
+                    } else if (t.equalsIgnoreCase("false") || t.equals("0")) {
+                        yield "0";
+                    } else {
+                        throw new InvalidDataException("BOOLEAN requires true/false or 1/0");
+                    }
+                }
             }
             default -> String.valueOf(value);
         };
@@ -212,10 +228,11 @@ public class AttributeValueServiceImpl implements AttributeValueService {
     private void validateOptions(AttributeDefinition def, String rawValue) {
         if (rawValue == null) return;
 
-        if (def.getDataType() == AttributeDataType.SELECT) {
+        if (def.getDataType() == AttributeDataType.SELECT || def.getDataType() == AttributeDataType.RADIO) {
             Long optionId = Long.valueOf(rawValue);
             if (!optionValueRepository.existsByIdAndAttributeDefinitionId(optionId, def.getId())) {
-                throw new InvalidDataException("Invalid SELECT option ID: " + optionId);
+                String label = def.getDataType() == AttributeDataType.SELECT ? "SELECT" : "RADIO";
+                throw new InvalidDataException("Invalid " + label + " option ID: " + optionId);
             }
         } else if (def.getDataType() == AttributeDataType.MULTISELECT) {
             List<Long> ids = AttributeValueUtil.parseMultiSelect(rawValue);
@@ -237,7 +254,7 @@ public class AttributeValueServiceImpl implements AttributeValueService {
 
         List<Long> optionIds = new ArrayList<>();
         try {
-            if (type == AttributeDataType.SELECT) {
+            if (type == AttributeDataType.SELECT || type == AttributeDataType.RADIO) {
                 optionIds.add(Long.valueOf(raw.trim()));
             } else if (type == AttributeDataType.MULTISELECT) {
                 optionIds.addAll(AttributeValueUtil.parseMultiSelect(raw));

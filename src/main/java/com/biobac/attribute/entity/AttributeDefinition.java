@@ -22,7 +22,7 @@ public class AttributeDefinition extends BaseAuditable {
     @Column(nullable = false)
     private AttributeDataType dataType;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "attribute_group_definitions",
             joinColumns = @JoinColumn(name = "attribute_definition_id"),
             inverseJoinColumns = @JoinColumn(name = "attribute_group_id"))

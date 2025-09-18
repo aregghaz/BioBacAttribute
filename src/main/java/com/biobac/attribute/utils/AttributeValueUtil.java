@@ -93,7 +93,12 @@ public final class AttributeValueUtil {
             case MULTISELECT:
                 return true;
             case SELECT:
+            case RADIO:
                 return isNumber(value);
+            case BOOLEAN:
+                if (isBlank(value)) return true;
+                String t = value.trim();
+                return t.equals("1") || t.equals("0") || t.equalsIgnoreCase("true") || t.equalsIgnoreCase("false");
             case INPUT:
             case TEXTAREA:
                 return true;
@@ -150,7 +155,13 @@ public final class AttributeValueUtil {
             case MULTISELECT:
                 return parseMultiSelect(value);
             case SELECT:
+            case RADIO:
                 return Long.valueOf(value.trim());
+            case BOOLEAN:
+                String t = value.trim();
+                if (t.equals("1") || t.equalsIgnoreCase("true")) return Boolean.TRUE;
+                if (t.equals("0") || t.equalsIgnoreCase("false")) return Boolean.FALSE;
+                return Boolean.parseBoolean(t);
             case INPUT:
             case TEXTAREA:
             default:
