@@ -124,7 +124,11 @@ public class AttributeServiceImpl implements AttributeService {
             if (optReq.getId() == null) {
                 OptionValue newOpt = new OptionValue();
                 newOpt.setLabel(optReq.getLabel());
-                newOpt.setValue(optReq.getValue());
+                if (optReq.getValue() == null) {
+                    newOpt.setValue(optReq.getLabel());
+                } else {
+                    newOpt.setValue(optReq.getValue());
+                }
                 newOpt.setAttributeDefinition(attribute);
                 optionValueRepository.save(newOpt);
                 attribute.getOptions().add(newOpt);
@@ -142,7 +146,11 @@ public class AttributeServiceImpl implements AttributeService {
                     }
                 } else {
                     existingOpt.setLabel(optReq.getLabel());
-                    existingOpt.setValue(optReq.getValue());
+                    if (optReq.getValue() == null) {
+                        existingOpt.setValue(optReq.getLabel());
+                    } else {
+                        existingOpt.setValue(optReq.getValue());
+                    }
                 }
 
                 existingOptions.remove(optReq.getId());
