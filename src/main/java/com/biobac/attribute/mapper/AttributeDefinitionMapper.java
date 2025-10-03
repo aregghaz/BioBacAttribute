@@ -21,8 +21,8 @@ public interface AttributeDefinitionMapper {
         if (entity == null) {
             return null;
         }
-
         AttributeDataType type = entity.getDataType();
+
         if (EnumSet.of(AttributeDataType.SELECT, AttributeDataType.MULTISELECT, AttributeDataType.RADIO).contains(type)) {
             AttributeOptionDefResponse resp = new AttributeOptionDefResponse();
             resp.setId(entity.getId());
@@ -43,7 +43,11 @@ public interface AttributeDefinitionMapper {
             return resp;
         }
 
-        return toDto(entity);
+        AttributeDefResponse base = toDto(entity);
+        if (base != null) {
+            base.setAttributeGroupIds(mapGroupIds(entity));
+        }
+        return base;
     }
 
     default List<Long> mapGroupIds(AttributeDefinition entity) {

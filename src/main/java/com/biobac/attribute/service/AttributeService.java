@@ -14,6 +14,7 @@ import java.util.Set;
 
 public interface AttributeService {
     AttributeDefResponse getById(Long id);
+
     AttributeDefResponse createAttributeDefinition(AttributeDefRequest request);
 
     AttributeDefResponse updateAttributeDefinition(Long id, AttributeDefUpdateRequest request);

@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AttributeServiceImpl implements AttributeService {
-
     private final AttributeDefinitionRepository attributeDefinitionRepository;
     private final AttributeValueRepository attributeValueRepository;
     private final OptionValueRepository optionValueRepository;
@@ -113,6 +112,7 @@ public class AttributeServiceImpl implements AttributeService {
         }
 
         AttributeDefinition saved = attributeDefinitionRepository.save(attribute);
+
         return attributeDefinitionMapper.toDetailedDto(saved);
     }
 
