@@ -4,5 +4,6 @@ public enum AttributeTargetType {
     PRODUCT,
     INGREDIENT,
     WAREHOUSE,
-    COMPANY
+    COMPANY,
+    OUR_COMPANY
 }
